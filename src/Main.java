@@ -20,6 +20,7 @@ public class Main {
 	
 	public List<byte[]> hashes = new ArrayList<>();
 	public List<String> commonBins = new ArrayList<>();
+	public long start = System.currentTimeMillis();
 	
     public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
     	Main m = new Main();
@@ -79,6 +80,8 @@ public class Main {
     		if (Arrays.equals(known, hash)) {
     			System.out.println("Found " + pan + ": " + Base64.encodeBase64String(known));
     			hashes.remove(known);
+    			System.out.println("Milliseconds: " + (System.currentTimeMillis() - start));
+    			System.exit(0);
     			break;
     		}
     	}
