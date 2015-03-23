@@ -21,26 +21,23 @@ public class Main {
 	public List<byte[]> hashes = new ArrayList<>();
 	public List<String> commonBins = new ArrayList<>();
 	public long start = System.currentTimeMillis();
+	public int[] times2 = new int[10];
 	
     public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
     	Main m = new Main();
+    	for (int i = 0; i < 10; i++) m.times2[i] = i*2;
     	m.readHashesIn("data/hashes.txt");
     	m.getCommonBins("data/pans.txt");
     	m.findPANs();
-    	
-    	 int myInt = 5;
-    	  String myStringRepOfInt = String.format("%05d", myInt);
-    	  System.out.println("Using String.format: " + myStringRepOfInt);
     }
     
     public void findPANs() throws NoSuchAlgorithmException, UnsupportedEncodingException {
     	int checkDigit;
     	byte[] numDigits = new byte[10];
     	boolean invalid;
-    	String pan;
+    	long pan;
     	for (String bin : commonBins) {
-    		StringBuilder sb = new StringBuilder();
-    		sb.append(bin);
+    		pan = Long.parseLong(bin) * 10000000000L;
 //    		System.out.println("Starting " + bin);
     		for (int account = 0; account < 1000000000; account++) {
     			// Make sure number contains no more than 2 of each digit
@@ -58,18 +55,13 @@ public class Main {
     			}
     			if (invalid) continue;
     			
+    			long ccn = pan + (account * 10);
+//    			System.out.println(ccn);
     			// Check if it is a hashed pan
-    			sb.append(String.format("%09d", account));
-    			sb.append("0");
-    			checkDigit = generateCheckDigit(sb.toString());
-    			sb.deleteCharAt(15);
-    			sb.append(Integer.toString(checkDigit));
-    			pan = sb.toString();
-    			byte[] hash = sha1(pan);
-    			validateHash(hash, pan);
-    			
-    			
-    			sb.delete(6, 16);
+    			checkDigit = generateCheckDigit(ccn);
+    			ccn += checkDigit;
+    			byte[] hash = sha1(ccn);
+    			validateHash(hash, Long.toString(ccn));
     		}
     	}
     	System.out.println("done");
@@ -80,8 +72,8 @@ public class Main {
     		if (Arrays.equals(known, hash)) {
     			System.out.println("Found " + pan + ": " + Base64.encodeBase64String(known));
     			hashes.remove(known);
-    			System.out.println("Milliseconds: " + (System.currentTimeMillis() - start));
-    			System.exit(0);
+//    			System.out.println("Milliseconds: " + (System.currentTimeMillis() - start));
+//    			System.exit(0);
     			break;
     		}
     	}
@@ -131,12 +123,14 @@ public class Main {
         reader.close();
     }
      
-	public byte[] sha1(String input) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public byte[] sha1(long l) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		String input = Long.toString(l);
 	    MessageDigest mDigest = MessageDigest.getInstance("SHA1");
 	    return mDigest.digest(input.getBytes("US-ASCII"));
 	}
 	
-	private static int generateCheckDigit(String str) {
+	private static int generateCheckDigit(long l) {
+		String str = Long.toString(l);
         int[] ints = new int[str.length()];
         
         for (int i = 0; i< str.length(); i++) {
